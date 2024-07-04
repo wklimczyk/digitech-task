@@ -8,8 +8,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Recycler
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.jvm.isAccessible
 
 class TaskGridLayoutManager(
     private val rowsCount: Int,
@@ -47,19 +45,26 @@ class TaskGridLayoutManager(
         val lastItem = getChildAt(indexOfItemAtTheEnd)
 
         val lastItemEnd = lastItem?.run {
-            if (getIsLTR()) {
-                //TODO add overscroll to fill empty columns in page
-                getDecoratedRight(lastItem) + (lastItem.layoutParams as ViewGroup.MarginLayoutParams).marginEnd
+            if (isLayoutRTL()) {
+                getDecoratedLeft(lastItem) - (lastItem.layoutParams as ViewGroup.MarginLayoutParams).marginEnd
             } else {
-                getDecoratedLeft(lastItem) - (lastItem.layoutParams as ViewGroup.MarginLayoutParams).marginStart
+                getDecoratedRight(lastItem) + (lastItem.layoutParams as ViewGroup.MarginLayoutParams).marginEnd
             }
         } ?: 0
 
-        //TODO fix RTL scroll bounds
-        horizontalScrollOffset = min(
-            max(horizontalScrollOffset + dx, 0),
-            horizontalScrollOffset + (lastItemEnd - width)
-        )
+        if (isLayoutRTL()) {
+            val resolvedDx = max(lastItemEnd, dx)
+            horizontalScrollOffset = min(
+                resolvedDx + horizontalScrollOffset,
+                0
+            )
+        } else {
+            val maxScroll = horizontalScrollOffset + (lastItemEnd - width)
+            horizontalScrollOffset = min(
+                max(horizontalScrollOffset + dx, 0),
+                maxScroll
+            )
+        }
         fill(recycler = recycler)
         return horizontalScrollOffset - lastScrollOffset
     }
@@ -76,17 +81,16 @@ class TaskGridLayoutManager(
 
     private fun fill(recycler: Recycler) {
         detachAndScrapAttachedViews(recycler)
-        val itemWidth = width / columnsCount
-        val itemHeight = height / rowsCount
-        pageWidth = itemWidth * columnsCount
+        val itemSize = width / columnsCount
+        pageWidth = itemSize * columnsCount
         val pageSize = columnsCount * rowsCount
 
         for (index in 0 until itemCount) {
             val view = recycler.getViewForPosition(index)
             addView(view)
             view.updateLayoutParams {
-                width = itemWidth
-                height = itemHeight
+                width = itemSize
+                height = itemSize
             }
             val pageIndex = index / pageSize
             val itemIndexOnPage = index % pageSize
@@ -96,19 +100,19 @@ class TaskGridLayoutManager(
             val left: Int
             val right: Int
 
-            if (getIsLTR()) {
-                left = pageIndex * pageWidth + columnIndex * itemWidth - horizontalScrollOffset
-                right = left + itemWidth
-            } else {
+            if (isLayoutRTL()) {
                 right =
-                    width - (pageIndex * pageWidth) - columnIndex * itemWidth + horizontalScrollOffset
-                left = right - itemWidth
+                    width - (pageIndex * pageWidth) - columnIndex * itemSize - horizontalScrollOffset
+                left = right - itemSize
+            } else {
+                left = pageIndex * pageWidth + columnIndex * itemSize - horizontalScrollOffset
+                right = left + itemSize
             }
 
-            val top = rowIndex * itemHeight
-            val bottom = top + itemHeight
+            val top = rowIndex * itemSize
+            val bottom = top + itemSize
 
-            measureChildWithMargins(view, itemWidth, itemHeight)
+            measureChildWithMargins(view, itemSize, itemSize)
             layoutDecoratedWithMargins(view, left, top, right, bottom)
         }
 
@@ -117,25 +121,14 @@ class TaskGridLayoutManager(
         }
     }
 
-    private fun getIsLTR() = layoutDirection == RecyclerView.LAYOUT_DIRECTION_LTR
+    private fun isLayoutRTL() = layoutDirection == RecyclerView.LAYOUT_DIRECTION_RTL
 
     fun scrollToPage(pageNumber: Int) {
         getRecyclerView()?.let { rv ->
-            val pageOffset = (pageNumber - 1) * pageWidth
-            rv.smoothScrollBy(pageOffset - horizontalScrollOffset, 0)
+            var pageOffset = (pageNumber - 1) * pageWidth
+            if (isLayoutRTL()) pageOffset *= -1
+            val dx = pageOffset - horizontalScrollOffset
+            rv.smoothScrollBy(dx, 0)
         }
     }
-
-    private fun getRecyclerView() =
-        RecyclerView.LayoutManager::class.memberProperties.find { it.name == "mRecyclerView" }
-            ?.let {
-                it.isAccessible = true
-                it.get(this) as RecyclerView
-            }
-
-    private fun getRecycler(rv: RecyclerView) =
-        RecyclerView::class.memberProperties.find { it.name == "mRecycler" }?.let {
-            it.isAccessible = true
-            it.get(rv) as Recycler
-        }
 }

@@ -27,7 +27,7 @@ import kotlin.math.ceil
 
 const val rowsCount = 2
 const val columnsCount = 5
-const val itemCount = 20
+const val itemCount = 56
 
 class MainActivity : ComponentActivity() {
     private lateinit var viewModel: TaskGridViewModel
