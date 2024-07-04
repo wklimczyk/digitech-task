@@ -10,20 +10,15 @@ import kotlin.math.max
 import kotlin.math.min
 
 class TaskGridLayoutManager(
-    private val rowsCount: Int,
-    private val columnsCount: Int,
-    private val context: Context
+    private val rowsCount: Int, private val columnsCount: Int, private val context: Context
 //) : LinearLayoutManager(context, RecyclerView.HORIZONTAL, false) {
 ) : RecyclerView.LayoutManager() {
 
     private var horizontalScrollOffset = 0
     var pageWidth: Int = 0
 
-    private var recycler: Recycler? = null
-
     override fun generateDefaultLayoutParams() = RecyclerView.LayoutParams(
-        RecyclerView.LayoutParams.WRAP_CONTENT,
-        RecyclerView.LayoutParams.WRAP_CONTENT
+        RecyclerView.LayoutParams.WRAP_CONTENT, RecyclerView.LayoutParams.WRAP_CONTENT
     )
 
     override fun onLayoutChildren(recycler: RecyclerView.Recycler, state: RecyclerView.State?) {
@@ -33,9 +28,7 @@ class TaskGridLayoutManager(
     override fun canScrollHorizontally() = true
 
     override fun scrollHorizontallyBy(
-        dx: Int,
-        recycler: Recycler,
-        state: RecyclerView.State?
+        dx: Int, recycler: Recycler, state: RecyclerView.State?
     ): Int {
         if (childCount < rowsCount * columnsCount) return 0
         val lastScrollOffset = horizontalScrollOffset
@@ -55,28 +48,26 @@ class TaskGridLayoutManager(
         if (isLayoutRTL()) {
             val resolvedDx = max(lastItemEnd, dx)
             horizontalScrollOffset = min(
-                resolvedDx + horizontalScrollOffset,
-                0
+                resolvedDx + horizontalScrollOffset, 0
             )
         } else {
             val maxScroll = horizontalScrollOffset + (lastItemEnd - width)
             horizontalScrollOffset = min(
-                max(horizontalScrollOffset + dx, 0),
-                maxScroll
+                max(horizontalScrollOffset + dx, 0), maxScroll
             )
         }
+
         fill(recycler = recycler)
         return horizontalScrollOffset - lastScrollOffset
     }
 
     override fun smoothScrollToPosition(
-        recyclerView: RecyclerView,
-        state: RecyclerView.State?,
-        position: Int
+        recyclerView: RecyclerView, state: RecyclerView.State?, position: Int
     ) {
-        val linearSmoothScroller = LinearSmoothScroller(recyclerView.context)
-        linearSmoothScroller.targetPosition = position
-        startSmoothScroll(linearSmoothScroller)
+        LinearSmoothScroller(recyclerView.context).apply {
+            targetPosition = position
+            startSmoothScroll(this)
+        }
     }
 
     private fun fill(recycler: Recycler) {

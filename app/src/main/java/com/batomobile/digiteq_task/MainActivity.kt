@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SnapHelper
 import com.batomobile.digiteq_task.databinding.ActivityMainBinding
 import com.batomobile.digiteq_task.ui.grid.TaskGridLayoutManager
 import com.batomobile.digiteq_task.ui.task.TaskGridAdapter
