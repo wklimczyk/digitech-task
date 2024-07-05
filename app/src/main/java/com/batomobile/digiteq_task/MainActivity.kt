@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SnapHelper
 import com.batomobile.digiteq_task.databinding.ActivityMainBinding
 import com.batomobile.digiteq_task.ui.grid.TaskGridLayoutManager
+import com.batomobile.digiteq_task.ui.grid.TaskGridSnapHelper
 import com.batomobile.digiteq_task.ui.task.TaskGridAdapter
 import com.batomobile.digiteq_task.ui.task.TaskGridViewModel
 import com.batomobile.digiteq_task.ui.theme.DigitechTaskTheme
@@ -28,7 +29,7 @@ import kotlin.math.ceil
 
 const val rowsCount = 2
 const val columnsCount = 5
-const val itemCount = 56
+const val itemCount = 104
 
 class MainActivity : ComponentActivity() {
     private lateinit var viewModel: TaskGridViewModel
@@ -52,6 +53,7 @@ class MainActivity : ComponentActivity() {
             setContentView(root)
             gridRecyclerView.layoutManager = getLayoutManager()
             gridRecyclerView.adapter = adapter
+            TaskGridSnapHelper().attachToRecyclerView(gridRecyclerView)
         }
     }
 

@@ -1,6 +1,7 @@
 package com.batomobile.digiteq_task.ui.grid
 
 import android.content.Context
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.LinearSmoothScroller
@@ -15,7 +16,7 @@ class TaskGridLayoutManager(
 ) : RecyclerView.LayoutManager() {
 
     private var horizontalScrollOffset = 0
-    var pageWidth: Int = 0
+    private var pageWidth: Int = 0
 
     override fun generateDefaultLayoutParams() = RecyclerView.LayoutParams(
         RecyclerView.LayoutParams.WRAP_CONTENT, RecyclerView.LayoutParams.WRAP_CONTENT
@@ -112,7 +113,7 @@ class TaskGridLayoutManager(
         }
     }
 
-    private fun isLayoutRTL() = layoutDirection == RecyclerView.LAYOUT_DIRECTION_RTL
+    fun isLayoutRTL() = layoutDirection == RecyclerView.LAYOUT_DIRECTION_RTL
 
     fun scrollToPage(pageNumber: Int) {
         getRecyclerView()?.let { rv ->
@@ -121,5 +122,24 @@ class TaskGridLayoutManager(
             val dx = pageOffset - horizontalScrollOffset
             rv.smoothScrollBy(dx, 0)
         }
+    }
+
+    fun getSnapTargetAnchor(snapTarget: View): View? {
+        val pos = getPosition(snapTarget)
+        val anchorIndex = if (isLayoutRTL()) {
+            val pageSize = columnsCount * rowsCount
+            if (pos + pageSize > itemCount) {
+                if (pos + columnsCount >= itemCount) {
+                    pos - pos % (columnsCount) + columnsCount
+                } else {
+                    pos
+                }
+            } else {
+                pos - pos % (pageSize) + pageSize
+            }
+        } else {
+            pos - pos % (columnsCount * rowsCount)
+        }
+        return getChildAt(anchorIndex)
     }
 }
